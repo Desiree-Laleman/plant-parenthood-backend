@@ -23,18 +23,18 @@ const errorResponse = (error: any, res: any) => {
 //   }
 // });
 
-// get plants by userID
-plantRouter.get("/plants/:googleId", async (req, res) => {
-  const googleId = req.params.googleId;
+// get user plants by userID to display their plants
+plantRouter.get("/users/:googleId/plants", async (req, res) => {
   try {
+    const googleId = req.params.googleId;
     const client = await getClient();
-    const plant = await client
+    const plants = await client
       .db()
       .collection<Plant>("plants")
       .find({ googleId })
       .toArray();
-    if (plant) {
-      res.json(plant);
+    if (plants) {
+      res.status(200).json(plants);
     } else {
       res.status(404).json({ message: "Not Found" });
     }
@@ -43,14 +43,18 @@ plantRouter.get("/plants/:googleId", async (req, res) => {
   }
 });
 
-// get plants by plant ID
-plantRouter.get("/plants/:googleId/:id", async (req, res) => {
-  const id = req.params.id;
+// get a plant by plant ID to list info about that plant
+plantRouter.get("/users/:googleId/plants/:id", async (req, res) => {
   try {
+    const googleId = req.params.googleId;
+    const _id = new ObjectId(req.params.id);
     const client = await getClient();
-    const plant = await client.db().collection<Plant>("plants").findOne({ id });
+    const plant = await client
+      .db()
+      .collection<Plant>("plants")
+      .findOne({ googleId, _id });
     if (plant) {
-      res.json(plant);
+      res.status(200).json(plant);
     } else {
       res.status(404).json({ message: "Not Found" });
     }
@@ -59,10 +63,10 @@ plantRouter.get("/plants/:googleId/:id", async (req, res) => {
   }
 });
 
-// create new plant
-plantRouter.post("/plants", async (req, res) => {
-  const plant = req.body as Plant;
+// create new plant and adds it to plant collection
+plantRouter.post("/users/plants", async (req, res) => {
   try {
+    const plant = req.body as Plant;
     const client = await getClient();
     await client.db().collection<Plant>("plants").insertOne(plant);
     res.status(201).json(plant);
@@ -71,41 +75,42 @@ plantRouter.post("/plants", async (req, res) => {
   }
 });
 
-// delete plant by ID
-plantRouter.delete("/plants/:id", async (req, res) => {
-  const id = req.params.id;
+// delete plant by new object ID
+plantRouter.delete("/users/:googleId/plants/:id", async (req, res) => {
   try {
+    const googleId = req.params.googleId;
+    const _id = new ObjectId(req.params.id);
     const client = await getClient();
     const result = await client
       .db()
       .collection<Plant>("plants")
-      .deleteOne({ _id: new ObjectId(id) });
-    if (result.deletedCount === 0) {
-      res.status(404).json({ message: "Not Found" });
+      .deleteOne({ googleId, _id });
+    if (result.deletedCount) {
+      res.sendStatus(204);
     } else {
-      res.status(204).end();
+      res.status(404).json({ message: "Not Found" });
     }
   } catch (err) {
     errorResponse(err, res);
   }
 });
 
-// replace / update plant by ID
-plantRouter.put("/plants/:id", async (req, res) => {
-  const id = req.params.id;
-  const data: Plant = req.body;
-  delete data._id; // remove _id from body so we only have one.
+// replace / update plant by ID only updates plant nickname and photo
+plantRouter.put("/users/:googleId/plants/:id", async (req, res) => {
+  const googleId: string = req.params.googleId;
+  const _id: ObjectId = new ObjectId(req.params.id);
+  const updatedPlant: Plant = req.body;
+  delete updatedPlant._id; // remove _id from body so we only have one.
   try {
     const client = await getClient();
     const result = await client
       .db()
       .collection<Plant>("plants")
-      .replaceOne({ _id: new ObjectId(id) }, data);
-    if (result.modifiedCount === 0) {
-      res.status(404).json({ message: "Not Found" });
+      .replaceOne({ googleId, _id }, updatedPlant);
+    if (result.modifiedCount) {
+      res.status(200).json(updatedPlant);
     } else {
-      data._id = new ObjectId(id);
-      res.json(data);
+      res.status(404).json({ message: "Not Found" });
     }
   } catch (err) {
     errorResponse(err, res);

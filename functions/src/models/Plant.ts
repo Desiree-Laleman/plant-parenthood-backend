@@ -5,7 +5,6 @@ export default interface Plant {
   googleId: string;
   nickName: string;
   commonName: string;
-  watering: string;
-  sunlight: string;
+  watering: number;
   pic?: string;
 }
