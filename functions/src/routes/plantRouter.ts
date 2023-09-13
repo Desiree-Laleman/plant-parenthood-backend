@@ -75,26 +75,6 @@ plantRouter.post("/users/plants", async (req, res) => {
   }
 });
 
-// delete plant by new object ID
-plantRouter.delete("/users/:googleId/plants/:id", async (req, res) => {
-  try {
-    const googleId = req.params.googleId;
-    const _id = new ObjectId(req.params.id);
-    const client = await getClient();
-    const result = await client
-      .db()
-      .collection<Plant>("plants")
-      .deleteOne({ googleId, _id });
-    if (result.deletedCount) {
-      res.sendStatus(204);
-    } else {
-      res.status(404).json({ message: "Not Found" });
-    }
-  } catch (err) {
-    errorResponse(err, res);
-  }
-});
-
 // replace / update plant by ID only updates plant nickname and photo
 plantRouter.put("/users/:googleId/plants/:id", async (req, res) => {
   const googleId: string = req.params.googleId;
@@ -109,6 +89,26 @@ plantRouter.put("/users/:googleId/plants/:id", async (req, res) => {
       .replaceOne({ googleId, _id }, updatedPlant);
     if (result.modifiedCount) {
       res.status(200).json(updatedPlant);
+    } else {
+      res.status(404).json({ message: "Not Found" });
+    }
+  } catch (err) {
+    errorResponse(err, res);
+  }
+});
+
+// delete plant by new object ID
+plantRouter.delete("/users/:googleId/plants/:id", async (req, res) => {
+  try {
+    const googleId = req.params.googleId;
+    const _id = new ObjectId(req.params.id);
+    const client = await getClient();
+    const result = await client
+      .db()
+      .collection<Plant>("plants")
+      .deleteOne({ googleId, _id });
+    if (result.deletedCount) {
+      res.sendStatus(204);
     } else {
       res.status(404).json({ message: "Not Found" });
     }
