@@ -23,7 +23,7 @@ const errorResponse = (error: any, res: any) => {
 //   }
 // });
 
-// get plant by ID
+// get plants by userID
 plantRouter.get("/plants/:googleId", async (req, res) => {
   const googleId = req.params.googleId;
   try {
@@ -33,6 +33,22 @@ plantRouter.get("/plants/:googleId", async (req, res) => {
       .collection<Plant>("plants")
       .find({ googleId })
       .toArray();
+    if (plant) {
+      res.json(plant);
+    } else {
+      res.status(404).json({ message: "Not Found" });
+    }
+  } catch (err) {
+    errorResponse(err, res);
+  }
+});
+
+// get plants by plant ID
+plantRouter.get("/plants/:googleId/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const client = await getClient();
+    const plant = await client.db().collection<Plant>("plants").findOne({ id });
     if (plant) {
       res.json(plant);
     } else {
