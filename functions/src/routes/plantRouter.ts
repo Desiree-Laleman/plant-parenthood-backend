@@ -11,18 +11,6 @@ const errorResponse = (error: any, res: any) => {
   res.status(500).json({ message: "Internal Server Error" });
 };
 
-// // get all plants
-// plantRouter.get("/plants", async (req, res) => {
-//   try {
-//     const client = await getClient();
-//     const cursor = client.db().collection<Plant>("plants").find();
-//     const results = await cursor.toArray();
-//     res.json(results);
-//   } catch (err) {
-//     errorResponse(err, res);
-//   }
-// });
-
 // get user plants by userID to display their plants
 plantRouter.get("/users/:googleId/plants", async (req, res) => {
   try {
